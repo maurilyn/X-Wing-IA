@@ -306,7 +306,7 @@
             element.classList.add('active');
         }
 
-        // O Motor de Lógica
+// O Motor de Lógica
         function calculateAI() {
             const ship = document.getElementById('shipSelect').value;
             const isStressed = document.getElementById('stressCheck').checked;
@@ -322,13 +322,18 @@
             if (ship === 't70') {
                 if (posFront.includes(currentPosition)) {
                     maneuver = (currentRange === 1) ? "Curva Fechada 2" : "Frente 3";
-                    action = "Foco ou Mira";
+                    
+                    // DECISÃO DEFINITIVA: 
+                    // Alcance 1 = Foco (Mitigação de dano prioritária)
+                    // Alcance 2 ou 3 = Mira (Ataque otimizado)
+                    action = (currentRange === 1) ? "Foco" : "Mira (Target Lock)";
+                    
                 } else if (posBehind.includes(currentPosition)) {
-                    maneuver = "Talon Roll 3";
-                    action = "Foco";
+                    maneuver = "Talon Roll 3 (Manobra Vermelha)";
+                    action = "Nenhuma (Estressada após a manobra)";
                 } else {
                     maneuver = "Curva Leve 2 (Bank)";
-                    action = "Impulso (Boost) para ajuste";
+                    action = "Impulso (Boost) para ajuste de arco";
                 }
             } 
             else if (ship === 'bomber') {
@@ -350,10 +355,10 @@
                 }
             }
 
-            // Override de Estresse (Substitui a lógica normal)
+            // Override de Estresse (Substitui a lógica normal se já começou o turno estressada)
             if (isStressed) {
-                maneuver = "[MANOBRA VERDE] " + maneuver.split('(')[0]; // Tenta pegar só o nome base
-                action = "Nenhuma (Estressada)";
+                maneuver = "[MANOBRA VERDE] " + maneuver.split('(')[0]; 
+                action = "Nenhuma (Estressada previamente)";
             }
 
             // Atualização da Interface
@@ -363,14 +368,14 @@
             outManeuver.textContent = maneuver;
             outAction.textContent = action;
 
-            // Formatação de cor se estiver estressado
-            if (isStressed) {
+            // Formatação de cor para ações bloqueadas
+            if (isStressed || action.includes("Nenhuma")) {
                 outAction.classList.add('red');
             } else {
                 outAction.classList.remove('red');
             }
         }
-
+        
         // Registro do Service Worker (Mantém o PWA funcionando)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => {
