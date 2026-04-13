@@ -12,218 +12,106 @@
             --panel-bg: #15151a;
             --neon-blue: #00e5ff;
             --neon-red: #ff2a2a;
+            --neon-green: #39ff14;
             --text-main: #e0e0e0;
             --border-color: #333;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Courier New', Courier, monospace; /* Fonte com visual de terminal */
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 15px;
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 15px;
         }
 
         .header {
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--neon-blue);
-            padding-bottom: 10px;
+            width: 100%; max-width: 400px; text-align: center; margin-bottom: 20px;
+            border-bottom: 2px solid var(--neon-blue); padding-bottom: 10px;
             box-shadow: 0 4px 10px rgba(0, 229, 255, 0.1);
         }
 
-        .header h1 {
-            font-size: 1.2rem;
-            color: var(--neon-blue);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
+        .header h1 { font-size: 1.2rem; color: var(--neon-blue); text-transform: uppercase; letter-spacing: 2px; }
 
         .dashboard {
-            width: 100%;
-            max-width: 400px;
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
+            width: 100%; max-width: 400px; background: var(--panel-bg);
+            border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
 
-        .section-label {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .section-label { font-size: 0.8rem; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+        select {
+            width: 100%; padding: 12px; margin-bottom: 15px; background: #000;
+            border: 1px solid var(--neon-blue); color: var(--neon-blue); font-size: 1rem;
+            border-radius: 4px; outline: none; cursor: pointer;
         }
 
-        /* Seletor de Nave */
-        select {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 25px;
-            background: #000;
-            border: 1px solid var(--neon-blue);
-            color: var(--neon-blue);
-            font-size: 1rem;
-            border-radius: 4px;
-            outline: none;
-            cursor: pointer;
+        /* Status de Vida (Novo) */
+        .health-grid {
+            display: flex; gap: 10px; margin-bottom: 25px;
         }
+        
+        .health-box {
+            flex: 1; background: #111; border: 1px solid #444; border-radius: 4px;
+            padding: 10px; text-align: center;
+        }
+
+        .health-box label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 5px; text-transform: uppercase;}
+        
+        .health-box input {
+            width: 100%; background: transparent; border: none; color: white;
+            font-size: 1.5rem; font-weight: bold; text-align: center; outline: none;
+        }
+
+        .shield-box { border-bottom: 3px solid var(--neon-blue); }
+        .hull-box { border-bottom: 3px solid var(--neon-green); }
+        .hull-box.critical { border-bottom: 3px solid var(--neon-red); }
 
         /* Grid de Radar */
-        .radar-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            margin-bottom: 25px;
-        }
+        .radar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 25px; }
 
         .btn-radar {
-            background: #111;
-            border: 1px solid #444;
-            color: #888;
-            padding: 15px 0;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            background: #111; border: 1px solid #444; color: #888; padding: 15px 0;
+            font-size: 0.9rem; font-weight: bold; border-radius: 4px; cursor: pointer; transition: all 0.2s ease;
         }
 
-        .btn-radar.center-ia {
-            background: #222;
-            color: var(--neon-red);
-            border-color: var(--neon-red);
-            cursor: default;
-            font-size: 0.8rem;
-        }
-
-        .btn-radar:hover:not(.center-ia) {
-            background: #222;
-        }
-
-        .btn-radar.active {
-            background: rgba(0, 229, 255, 0.1);
-            color: var(--neon-blue);
-            border: 1px solid var(--neon-blue);
-            box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
-        }
+        .btn-radar.center-ia { background: #222; color: var(--neon-red); border-color: var(--neon-red); cursor: default; font-size: 0.8rem; }
+        .btn-radar:hover:not(.center-ia) { background: #222; }
+        .btn-radar.active { background: rgba(0, 229, 255, 0.1); color: var(--neon-blue); border: 1px solid var(--neon-blue); box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
 
         /* Botões de Alcance */
-        .range-container {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 25px;
-        }
-
+        .range-container { display: flex; gap: 8px; margin-bottom: 25px; }
         .btn-range {
-            flex: 1;
-            background: #111;
-            border: 1px solid #444;
-            color: #888;
-            padding: 12px 0;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            flex: 1; background: #111; border: 1px solid #444; color: #888; padding: 12px 0;
+            font-size: 0.9rem; font-weight: bold; border-radius: 4px; cursor: pointer; transition: all 0.2s ease;
         }
-
-        .btn-range.active {
-            background: rgba(0, 229, 255, 0.1);
-            color: var(--neon-blue);
-            border: 1px solid var(--neon-blue);
-            box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
-        }
+        .btn-range.active { background: rgba(0, 229, 255, 0.1); color: var(--neon-blue); border: 1px solid var(--neon-blue); box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
 
         /* Checkbox Estresse */
         .stress-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 25px;
-            background: rgba(255, 42, 42, 0.05);
-            padding: 10px;
-            border: 1px dashed var(--neon-red);
-            border-radius: 4px;
-            cursor: pointer;
+            display: flex; align-items: center; gap: 10px; margin-bottom: 25px;
+            background: rgba(255, 42, 42, 0.05); padding: 10px; border: 1px dashed var(--neon-red);
+            border-radius: 4px; cursor: pointer;
         }
-
-        .stress-box input {
-            cursor: pointer;
-            width: 18px;
-            height: 18px;
-            accent-color: var(--neon-red);
-        }
-
-        .stress-box label {
-            color: var(--neon-red);
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
+        .stress-box input { cursor: pointer; width: 18px; height: 18px; accent-color: var(--neon-red); }
+        .stress-box label { color: var(--neon-red); font-size: 0.9rem; cursor: pointer; }
 
         /* Botão Principal */
         .btn-process {
-            width: 100%;
-            background: var(--neon-blue);
-            color: #000;
-            font-weight: bold;
-            font-size: 1.1rem;
-            padding: 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
-            transition: transform 0.1s;
+            width: 100%; background: var(--neon-blue); color: #000; font-weight: bold; font-size: 1.1rem;
+            padding: 15px; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3); transition: transform 0.1s;
         }
-
-        .btn-process:active {
-            transform: scale(0.98);
-        }
+        .btn-process:active { transform: scale(0.98); }
 
         /* Área de Resultado */
-        .result-panel {
-            margin-top: 20px;
-            background: #000;
-            border-left: 4px solid var(--neon-blue);
-            padding: 15px;
-            border-radius: 0 4px 4px 0;
-            min-height: 80px;
-        }
-
-        .result-row {
-            margin-bottom: 10px;
-        }
-
-        .result-label {
-            color: #888;
-            font-size: 0.8rem;
-        }
-
-        .result-value {
-            display: block;
-            font-size: 1.1rem;
-            color: var(--neon-blue);
-            font-weight: bold;
-            margin-top: 3px;
-        }
-
-        .result-value.red {
-            color: var(--neon-red);
-        }
+        .result-panel { margin-top: 20px; background: #000; border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 0 4px 4px 0; min-height: 80px; }
+        .result-row { margin-bottom: 10px; }
+        .result-label { color: #888; font-size: 0.8rem; }
+        .result-value { display: block; font-size: 1.1rem; color: var(--neon-blue); font-weight: bold; margin-top: 3px; }
+        .result-value.red { color: var(--neon-red); }
+        .result-value.evasive { color: var(--neon-green); }
     </style>
 </head>
 <body>
@@ -240,10 +128,22 @@
             <option value="kwing">K-Wing (Suporte/SLAM)</option>
         </select>
 
+        <div class="section-label">Integridade Estrutural da IA</div>
+        <div class="health-grid">
+            <div class="health-box shield-box">
+                <label>Escudos</label>
+                <input type="number" id="shieldCount" min="0" max="5" value="3">
+            </div>
+            <div class="health-box hull-box" id="hullContainer">
+                <label>Casco</label>
+                <input type="number" id="hullCount" min="0" max="9" value="3" onchange="checkCritical()">
+            </div>
+        </div>
+
         <div class="section-label">Sua Posição (Império) no Radar</div>
         <div class="radar-grid" id="radarGrid">
             <button class="btn-radar" onclick="setPos('NW', this)">NW</button>
-            <button class="btn-radar active" onclick="setPos('N', this)">N (Frente)</button>
+            <button class="btn-radar active" onclick="setPos('N', this)">N</button>
             <button class="btn-radar" onclick="setPos('NE', this)">NE</button>
             
             <button class="btn-radar" onclick="setPos('W', this)">W</button>
@@ -251,7 +151,7 @@
             <button class="btn-radar" onclick="setPos('E', this)">E</button>
             
             <button class="btn-radar" onclick="setPos('SW', this)">SW</button>
-            <button class="btn-radar" onclick="setPos('S', this)">S (Atrás)</button>
+            <button class="btn-radar" onclick="setPos('S', this)">S</button>
             <button class="btn-radar" onclick="setPos('SE', this)">SE</button>
         </div>
 
@@ -272,115 +172,129 @@
         <div class="result-panel">
             <div class="result-row">
                 <span class="result-label">MANOBRA CALCULADA:</span>
-                <span class="result-value" id="outManeuver">Aguardando dados...</span>
+                <span class="result-value" id="outManeuver">Aguardando telemetria...</span>
             </div>
             <div class="result-row" style="margin-bottom: 0;">
                 <span class="result-label">AÇÃO SUGERIDA:</span>
-                <span class="result-value" id="outAction">Aguardando dados...</span>
+                <span class="result-value" id="outAction">Aguardando telemetria...</span>
             </div>
         </div>
     </div>
 
     <script>
-        // Estado inicial
         let currentPosition = 'N';
         let currentRange = 2;
 
-        // Funções para atualizar a UI e o estado do Radar
         function setPos(pos, element) {
             currentPosition = pos;
-            // Remove a classe active de todos os botões do radar (exceto o centro)
-            const buttons = document.querySelectorAll('#radarGrid .btn-radar:not(.center-ia)');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            // Adiciona active no botão clicado
+            document.querySelectorAll('#radarGrid .btn-radar:not(.center-ia)').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
         }
 
-        // Funções para atualizar a UI e o estado do Alcance
         function setDist(dist, element) {
             currentRange = dist;
-            // Remove a classe active de todos os botões de range
-            const buttons = document.querySelectorAll('#rangeGrid .btn-range');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            // Adiciona active no botão clicado
+            document.querySelectorAll('#rangeGrid .btn-range').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
         }
 
-// O Motor de Lógica
+        // Alerta visual de Casco Crítico
+        function checkCritical() {
+            const hull = parseInt(document.getElementById('hullCount').value);
+            const container = document.getElementById('hullContainer');
+            if (hull === 1) container.classList.add('critical');
+            else container.classList.remove('critical');
+        }
+
         function calculateAI() {
             const ship = document.getElementById('shipSelect').value;
             const isStressed = document.getElementById('stressCheck').checked;
+            const shields = parseInt(document.getElementById('shieldCount').value);
+            const hull = parseInt(document.getElementById('hullCount').value);
             
             let maneuver = "";
             let action = "";
+            let isEvasive = false;
 
             const posFront = ['NW', 'N', 'NE'];
             const posBehind = ['SW', 'S', 'SE'];
             const posSide = ['W', 'E'];
 
-            // Lógica Baseada na Nave Selecionada
-            if (ship === 't70') {
-                if (posFront.includes(currentPosition)) {
-                    maneuver = (currentRange === 1) ? "Curva Fechada 2" : "Frente 3";
-                    
-                    // DECISÃO DEFINITIVA: 
-                    // Alcance 1 = Foco (Mitigação de dano prioritária)
-                    // Alcance 2 ou 3 = Mira (Ataque otimizado)
-                    action = (currentRange === 1) ? "Foco" : "Mira (Target Lock)";
-                    
-                } else if (posBehind.includes(currentPosition)) {
-                    maneuver = "Talon Roll 3 (Manobra Vermelha)";
-                    action = "Nenhuma (Estressada após a manobra)";
-                } else {
-                    maneuver = "Curva Leve 2 (Bank)";
-                    action = "Impulso (Boost) para ajuste de arco";
-                }
-            } 
-            else if (ship === 'bomber') {
-                if (currentRange === 1) {
-                    maneuver = "Frente 1";
-                    action = "Soltar Bomba / Minas";
-                } else {
-                    maneuver = "Curva Leve 2";
-                    action = "Foco";
-                }
-            } 
-            else if (ship === 'kwing') {
-                if (currentRange === 1) {
-                    maneuver = "Manobra SLAM (Fuga)";
+            // OVERRIDE: MÁQUINA DE ESTADOS (MODO SOBREVIVÊNCIA)
+            if (hull === 1 && shields === 0) {
+                isEvasive = true;
+                if (ship === 't70') {
+                    maneuver = "Frente 3 ou 4 (Fuga Máxima)";
+                    action = "Esquiva (Evade) ou Impulso";
+                } else if (ship === 'kwing') {
+                    maneuver = "Manobra SLAM (Para longe do Império)";
                     action = "Nenhuma (Efeito do SLAM)";
-                } else {
-                    maneuver = "Frente 2";
-                    action = "Mira (Target Lock)";
+                } else if (ship === 'bomber') {
+                    maneuver = "Frente 2 (Velocidade Máxima)";
+                    action = "Soltar Bomba (Para bloquear perseguição)";
+                }
+            } 
+            // LÓGICA AGRESSIVA PADRÃO
+            else {
+                if (ship === 't70') {
+                    if (posFront.includes(currentPosition)) {
+                        maneuver = (currentRange === 1) ? "Curva Fechada 2" : "Frente 3";
+                        action = (currentRange === 1) ? "Foco" : "Mira (Target Lock)";
+                    } else if (posBehind.includes(currentPosition)) {
+                        maneuver = "Talon Roll 3 (Manobra Vermelha)";
+                        action = "Nenhuma (Estressada após a manobra)";
+                    } else {
+                        maneuver = "Curva Leve 2 (Bank)";
+                        action = "Impulso (Boost) para ajuste de arco";
+                    }
+                } 
+                else if (ship === 'bomber') {
+                    if (currentRange === 1) {
+                        maneuver = "Frente 1";
+                        action = "Soltar Bomba / Minas";
+                    } else {
+                        maneuver = "Curva Leve 2";
+                        action = "Foco";
+                    }
+                } 
+                else if (ship === 'kwing') {
+                    if (currentRange === 1) {
+                        maneuver = "Manobra SLAM (Fuga / Reposicionamento)";
+                        action = "Nenhuma (Efeito do SLAM)";
+                    } else {
+                        maneuver = "Frente 2";
+                        action = "Mira (Target Lock)";
+                    }
                 }
             }
 
-            // Override de Estresse (Substitui a lógica normal se já começou o turno estressada)
-            if (isStressed) {
+            // OVERRIDE DE ESTRESSE PRÉVIO
+            if (isStressed && !isEvasive) {
                 maneuver = "[MANOBRA VERDE] " + maneuver.split('(')[0]; 
                 action = "Nenhuma (Estressada previamente)";
+            } else if (isStressed && isEvasive) {
+                // Se está estressada E quase morrendo, tenta limpar o estresse fugindo
+                maneuver = "[MANOBRA VERDE] Reta Longe do Inimigo";
+                action = "Nenhuma (Tentando limpar estresse)";
             }
 
             // Atualização da Interface
             const outManeuver = document.getElementById('outManeuver');
             const outAction = document.getElementById('outAction');
 
-            outManeuver.textContent = maneuver;
-            outAction.textContent = action;
-
-            // Formatação de cor para ações bloqueadas
-            if (isStressed || action.includes("Nenhuma")) {
-                outAction.classList.add('red');
-            } else {
+            if (isEvasive) {
+                outManeuver.textContent = "[MODO EVASIVO] " + maneuver;
+                outAction.classList.add('evasive');
                 outAction.classList.remove('red');
+            } else {
+                outManeuver.textContent = maneuver;
+                outAction.classList.remove('evasive');
+                if (isStressed || action.includes("Nenhuma")) {
+                    outAction.classList.add('red');
+                } else {
+                    outAction.classList.remove('red');
+                }
             }
-        }
-        
-        // Registro do Service Worker (Mantém o PWA funcionando)
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => {
-                console.log('Service Worker não registrado (Normal se não estiver rodando em servidor local/https)');
-            });
+            outAction.textContent = action;
         }
     </script>
 </body>
