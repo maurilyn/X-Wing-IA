@@ -5,235 +5,377 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>X-Wing Tactical AI</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1a1a1a">
+    <meta name="theme-color" content="#0a0a0c">
     <style>
         :root {
-            --glow: #00d4ff;
-            --bg: #0d0d0d;
-            --panel: #1a1a1a;
-            --text: #e0e0e0;
+            --bg-color: #0a0a0c;
+            --panel-bg: #15151a;
+            --neon-blue: #00e5ff;
+            --neon-red: #ff2a2a;
+            --text-main: #e0e0e0;
+            --border-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace; /* Fonte com visual de terminal */
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 15px;
         }
 
-        h1 {
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--glow);
-            border-bottom: 2px solid var(--glow);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .container {
+        .header {
             width: 100%;
             max-width: 400px;
-            background: var(--panel);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            border: 1px solid #333;
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--neon-blue);
+            padding-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(0, 229, 255, 0.1);
         }
 
-        .section-title {
-            font-size: 0.9rem;
-            color: #888;
-            margin-bottom: 10px;
+        .header h1 {
+            font-size: 1.2rem;
+            color: var(--neon-blue);
             text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        select, button {
+        .dashboard {
+            width: 100%;
+            max-width: 400px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .section-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Seletor de Nave */
+        select {
             width: 100%;
             padding: 12px;
-            margin-bottom: 15px;
-            background: #252525;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 5px;
+            margin-bottom: 25px;
+            background: #000;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
             font-size: 1rem;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
         }
 
+        /* Grid de Radar */
         .radar-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 25px;
         }
 
-        .radar-grid button {
-            margin: 0;
+        .btn-radar {
+            background: #111;
+            border: 1px solid #444;
+            color: #888;
             padding: 15px 0;
-            background: #222;
-            font-weight: bold;
-        }
-
-        .radar-grid button.active {
-            background: var(--glow);
-            color: black;
-            border-color: white;
-        }
-
-        .ia-center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #333;
-            border: 1px dashed var(--glow);
-            font-size: 0.7rem;
-            color: var(--glow);
-        }
-
-        .dist-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .dist-row button {
-            flex: 1;
-        }
-
-        .checkbox-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
             font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .btn-main {
-            background: var(--glow);
-            color: black;
+        .btn-radar.center-ia {
+            background: #222;
+            color: var(--neon-red);
+            border-color: var(--neon-red);
+            cursor: default;
+            font-size: 0.8rem;
+        }
+
+        .btn-radar:hover:not(.center-ia) {
+            background: #222;
+        }
+
+        .btn-radar.active {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+        }
+
+        /* Botões de Alcance */
+        .range-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .btn-range {
+            flex: 1;
+            background: #111;
+            border: 1px solid #444;
+            color: #888;
+            padding: 12px 0;
+            font-size: 0.9rem;
             font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-range.active {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+        }
+
+        /* Checkbox Estresse */
+        .stress-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: rgba(255, 42, 42, 0.05);
+            padding: 10px;
+            border: 1px dashed var(--neon-red);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .stress-box input {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--neon-red);
+        }
+
+        .stress-box label {
+            color: var(--neon-red);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        /* Botão Principal */
+        .btn-process {
+            width: 100%;
+            background: var(--neon-blue);
+            color: #000;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 15px;
             border: none;
+            border-radius: 4px;
             cursor: pointer;
             text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            transition: transform 0.1s;
         }
 
-        .result-box {
+        .btn-process:active {
+            transform: scale(0.98);
+        }
+
+        /* Área de Resultado */
+        .result-panel {
+            margin-top: 20px;
             background: #000;
-            border: 1px solid var(--glow);
+            border-left: 4px solid var(--neon-blue);
             padding: 15px;
-            border-radius: 5px;
+            border-radius: 0 4px 4px 0;
             min-height: 80px;
-            font-family: 'Courier New', Courier, monospace;
         }
 
-        .highlight { color: var(--glow); font-weight: bold; }
+        .result-row {
+            margin-bottom: 10px;
+        }
+
+        .result-label {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .result-value {
+            display: block;
+            font-size: 1.1rem;
+            color: var(--neon-blue);
+            font-weight: bold;
+            margin-top: 3px;
+        }
+
+        .result-value.red {
+            color: var(--neon-red);
+        }
     </style>
 </head>
 <body>
 
-    <h1>Tactical HUD: Resistência</h1>
+    <div class="header">
+        <h1>IA de Combate: Resistência</h1>
+    </div>
 
-    <div class="container">
-        <p class="section-title">Inimigo Ativo</p>
+    <div class="dashboard">
+        <div class="section-label">Unidade Inimiga Ativa</div>
         <select id="shipSelect">
-            <option value="t70">T-70 X-Wing (Poe Dameron)</option>
-            <option value="bomber">MG-100 StarFortress (Bomber)</option>
-            <option value="kwing">K-Wing (Esege Tuketu)</option>
+            <option value="t70">T-70 X-Wing (Agressivo)</option>
+            <option value="bomber">MG-100 Bomber (Bombardeiro)</option>
+            <option value="kwing">K-Wing (Suporte/SLAM)</option>
         </select>
 
-        <p class="section-title">Posição do Império (Relativa à IA)</p>
-        <div class="radar-grid" id="radar">
-            <button onclick="selectPos(this, 'NW')">NW</button>
-            <button onclick="selectPos(this, 'N')">N</button>
-            <button onclick="selectPos(this, 'NE')">NE</button>
-            <button onclick="selectPos(this, 'W')">W</button>
-            <div class="ia-center">RESIST.</div>
-            <button onclick="selectPos(this, 'E')">E</button>
-            <button onclick="selectPos(this, 'SW')">SW</button>
-            <button onclick="selectPos(this, 'S')">S</button>
-            <button onclick="selectPos(this, 'SE')">SE</button>
+        <div class="section-label">Sua Posição (Império) no Radar</div>
+        <div class="radar-grid" id="radarGrid">
+            <button class="btn-radar" onclick="setPos('NW', this)">NW</button>
+            <button class="btn-radar active" onclick="setPos('N', this)">N (Frente)</button>
+            <button class="btn-radar" onclick="setPos('NE', this)">NE</button>
+            
+            <button class="btn-radar" onclick="setPos('W', this)">W</button>
+            <button class="btn-radar center-ia">IA</button>
+            <button class="btn-radar" onclick="setPos('E', this)">E</button>
+            
+            <button class="btn-radar" onclick="setPos('SW', this)">SW</button>
+            <button class="btn-radar" onclick="setPos('S', this)">S (Atrás)</button>
+            <button class="btn-radar" onclick="setPos('SE', this)">SE</button>
         </div>
 
-        <p class="section-title">Alcance (Range)</p>
-        <div class="dist-row" id="dist">
-            <button onclick="selectDist(this, 1)">1</button>
-            <button onclick="selectDist(this, 2)">2</button>
-            <button onclick="selectDist(this, 3)">3</button>
+        <div class="section-label">Distância do Alvo</div>
+        <div class="range-container" id="rangeGrid">
+            <button class="btn-range" onclick="setDist(1, this)">Alcance 1</button>
+            <button class="btn-range active" onclick="setDist(2, this)">Alcance 2</button>
+            <button class="btn-range" onclick="setDist(3, this)">Alcance 3</button>
         </div>
 
-        <div class="checkbox-row">
-            <input type="checkbox" id="stressed"> <label for="stressed">Nave da Resistência Estressada?</label>
-        </div>
+        <label class="stress-box">
+            <input type="checkbox" id="stressCheck">
+            <span>Nave da Resistência está Estressada?</span>
+        </label>
 
-        <button class="btn-main" onclick="processAI()">Processar Manobra</button>
+        <button class="btn-process" onclick="calculateAI()">PROCESSAR MANOBRA</button>
 
-        <div class="result-box" id="output">
-            Aguardando dados de telemetria...
+        <div class="result-panel">
+            <div class="result-row">
+                <span class="result-label">MANOBRA CALCULADA:</span>
+                <span class="result-value" id="outManeuver">Aguardando dados...</span>
+            </div>
+            <div class="result-row" style="margin-bottom: 0;">
+                <span class="result-label">AÇÃO SUGERIDA:</span>
+                <span class="result-value" id="outAction">Aguardando dados...</span>
+            </div>
         </div>
     </div>
 
     <script>
-        let selectedPos = 'N';
-        let selectedDist = 2;
+        // Estado inicial
+        let currentPosition = 'N';
+        let currentRange = 2;
 
-        function selectPos(btn, pos) {
-            document.querySelectorAll('#radar button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            selectedPos = pos;
+        // Funções para atualizar a UI e o estado do Radar
+        function setPos(pos, element) {
+            currentPosition = pos;
+            // Remove a classe active de todos os botões do radar (exceto o centro)
+            const buttons = document.querySelectorAll('#radarGrid .btn-radar:not(.center-ia)');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            // Adiciona active no botão clicado
+            element.classList.add('active');
         }
 
-        function selectDist(btn, d) {
-            document.querySelectorAll('#dist button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            selectedDist = d;
+        // Funções para atualizar a UI e o estado do Alcance
+        function setDist(dist, element) {
+            currentRange = dist;
+            // Remove a classe active de todos os botões de range
+            const buttons = document.querySelectorAll('#rangeGrid .btn-range');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            // Adiciona active no botão clicado
+            element.classList.add('active');
         }
 
-        function processAI() {
+        // O Motor de Lógica
+        function calculateAI() {
             const ship = document.getElementById('shipSelect').value;
-            const isStressed = document.getElementById('stressed').checked;
+            const isStressed = document.getElementById('stressCheck').checked;
+            
             let maneuver = "";
             let action = "";
 
-            // Lógica por nave
+            const posFront = ['NW', 'N', 'NE'];
+            const posBehind = ['SW', 'S', 'SE'];
+            const posSide = ['W', 'E'];
+
+            // Lógica Baseada na Nave Selecionada
             if (ship === 't70') {
-                if (['N', 'NW', 'NE'].includes(selectedPos)) {
-                    maneuver = selectedDist === 1 ? "Curva Fechada 2 (Turn)" : "Frente 3 (Straight)";
+                if (posFront.includes(currentPosition)) {
+                    maneuver = (currentRange === 1) ? "Curva Fechada 2" : "Frente 3";
                     action = "Foco ou Mira";
-                } else if (['S', 'SW', 'SE'].includes(selectedPos)) {
-                    maneuver = "Talon Roll 3 ou Giro-K 4";
+                } else if (posBehind.includes(currentPosition)) {
+                    maneuver = "Talon Roll 3";
                     action = "Foco";
                 } else {
                     maneuver = "Curva Leve 2 (Bank)";
-                    action = "Boost para ajuste";
+                    action = "Impulso (Boost) para ajuste";
                 }
-            } else if (ship === 'bomber') {
-                maneuver = selectedDist === 1 ? "Frente 1 ou Parada" : "Curva Leve 2";
-                action = selectedDist === 1 ? "Soltar Bomba / Minas" : "Foco";
-            } else if (ship === 'kwing') {
-                if (selectedDist === 1) {
-                    maneuver = "Slam (Velocidade 3)";
-                    action = "Fuga / Reposicionamento";
+            } 
+            else if (ship === 'bomber') {
+                if (currentRange === 1) {
+                    maneuver = "Frente 1";
+                    action = "Soltar Bomba / Minas";
+                } else {
+                    maneuver = "Curva Leve 2";
+                    action = "Foco";
+                }
+            } 
+            else if (ship === 'kwing') {
+                if (currentRange === 1) {
+                    maneuver = "Manobra SLAM (Fuga)";
+                    action = "Nenhuma (Efeito do SLAM)";
                 } else {
                     maneuver = "Frente 2";
                     action = "Mira (Target Lock)";
                 }
             }
 
-            if (isStressed) action = "Nenhuma (Estressada)";
+            // Override de Estresse (Substitui a lógica normal)
+            if (isStressed) {
+                maneuver = "[MANOBRA VERDE] " + maneuver.split('(')[0]; // Tenta pegar só o nome base
+                action = "Nenhuma (Estressada)";
+            }
 
-            document.getElementById('output').innerHTML = `
-                MANOBRA: <span class="highlight">${maneuver}</span><br>
-                AÇÃO: <span class="highlight">${action}</span>
-            `;
+            // Atualização da Interface
+            const outManeuver = document.getElementById('outManeuver');
+            const outAction = document.getElementById('outAction');
+
+            outManeuver.textContent = maneuver;
+            outAction.textContent = action;
+
+            // Formatação de cor se estiver estressado
+            if (isStressed) {
+                outAction.classList.add('red');
+            } else {
+                outAction.classList.remove('red');
+            }
         }
 
-        // Registrar Service Worker para PWA
+        // Registro do Service Worker (Mantém o PWA funcionando)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+            navigator.serviceWorker.register('sw.js').catch(err => {
+                console.log('Service Worker não registrado (Normal se não estiver rodando em servidor local/https)');
+            });
         }
     </script>
 </body>
