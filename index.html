@@ -1,301 +1,529 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-Wing Tactical AI</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0a0a0c">
+    <title>X-Wing AI - Motor Tático de Pesos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --bg-color: #0a0a0c;
-            --panel-bg: #15151a;
-            --neon-blue: #00e5ff;
-            --neon-red: #ff2a2a;
-            --neon-green: #39ff14;
-            --text-main: #e0e0e0;
-            --border-color: #333;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
-
         body {
-            background-color: var(--bg-color); color: var(--text-main);
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; padding: 15px;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
         }
-
-        .header {
-            width: 100%; max-width: 400px; text-align: center; margin-bottom: 20px;
-            border-bottom: 2px solid var(--neon-blue); padding-bottom: 10px;
-            box-shadow: 0 4px 10px rgba(0, 229, 255, 0.1);
+        .panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid #334155;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-
-        .header h1 { font-size: 1.2rem; color: var(--neon-blue); text-transform: uppercase; letter-spacing: 2px; }
-
-        .dashboard {
-            width: 100%; max-width: 400px; background: var(--panel-bg);
-            border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-        }
-
-        .section-label { font-size: 0.8rem; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-
-        select {
-            width: 100%; padding: 12px; margin-bottom: 15px; background: #000;
-            border: 1px solid var(--neon-blue); color: var(--neon-blue); font-size: 1rem;
-            border-radius: 4px; outline: none; cursor: pointer;
-        }
-
-        /* Status de Vida (Novo) */
-        .health-grid {
-            display: flex; gap: 10px; margin-bottom: 25px;
-        }
+        .manobra-verde { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
+        .manobra-branca { color: #f8fafc; text-shadow: 0 0 5px rgba(248, 250, 252, 0.3); }
+        .manobra-vermelha { color: #f87171; text-shadow: 0 0 8px rgba(248, 113, 113, 0.4); }
+        .acao-destaque { color: #facc15; text-shadow: 0 0 8px rgba(250, 204, 21, 0.5); }
         
-        .health-box {
-            flex: 1; background: #111; border: 1px solid #444; border-radius: 4px;
-            padding: 10px; text-align: center;
+        /* Sliders customizados */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
         }
-
-        .health-box label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 5px; text-transform: uppercase;}
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .slider-escudo::-webkit-slider-thumb { background: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.8); }
+        .slider-escudo::-webkit-slider-runnable-track { background: #1e3a8a; }
+        .slider-casco::-webkit-slider-thumb { background: #eab308; box-shadow: 0 0 10px rgba(234, 179, 8, 0.8); }
+        .slider-casco::-webkit-slider-runnable-track { background: #713f12; }
         
-        .health-box input {
-            width: 100%; background: transparent; border: none; color: white;
-            font-size: 1.5rem; font-weight: bold; text-align: center; outline: none;
+        /* Custom Checkbox */
+        .check-tactical {
+            accent-color: #eab308;
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
         }
-
-        .shield-box { border-bottom: 3px solid var(--neon-blue); }
-        .hull-box { border-bottom: 3px solid var(--neon-green); }
-        .hull-box.critical { border-bottom: 3px solid var(--neon-red); }
-
-        /* Grid de Radar */
-        .radar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 25px; }
-
-        .btn-radar {
-            background: #111; border: 1px solid #444; color: #888; padding: 15px 0;
-            font-size: 0.9rem; font-weight: bold; border-radius: 4px; cursor: pointer; transition: all 0.2s ease;
-        }
-
-        .btn-radar.center-ia { background: #222; color: var(--neon-red); border-color: var(--neon-red); cursor: default; font-size: 0.8rem; }
-        .btn-radar:hover:not(.center-ia) { background: #222; }
-        .btn-radar.active { background: rgba(0, 229, 255, 0.1); color: var(--neon-blue); border: 1px solid var(--neon-blue); box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
-
-        /* Botões de Alcance */
-        .range-container { display: flex; gap: 8px; margin-bottom: 25px; }
-        .btn-range {
-            flex: 1; background: #111; border: 1px solid #444; color: #888; padding: 12px 0;
-            font-size: 0.9rem; font-weight: bold; border-radius: 4px; cursor: pointer; transition: all 0.2s ease;
-        }
-        .btn-range.active { background: rgba(0, 229, 255, 0.1); color: var(--neon-blue); border: 1px solid var(--neon-blue); box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
-
-        /* Checkbox Estresse */
-        .stress-box {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 25px;
-            background: rgba(255, 42, 42, 0.05); padding: 10px; border: 1px dashed var(--neon-red);
-            border-radius: 4px; cursor: pointer;
-        }
-        .stress-box input { cursor: pointer; width: 18px; height: 18px; accent-color: var(--neon-red); }
-        .stress-box label { color: var(--neon-red); font-size: 0.9rem; cursor: pointer; }
-
-        /* Botão Principal */
-        .btn-process {
-            width: 100%; background: var(--neon-blue); color: #000; font-weight: bold; font-size: 1.1rem;
-            padding: 15px; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3); transition: transform 0.1s;
-        }
-        .btn-process:active { transform: scale(0.98); }
-
-        /* Área de Resultado */
-        .result-panel { margin-top: 20px; background: #000; border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 0 4px 4px 0; min-height: 80px; }
-        .result-row { margin-bottom: 10px; }
-        .result-label { color: #888; font-size: 0.8rem; }
-        .result-value { display: block; font-size: 1.1rem; color: var(--neon-blue); font-weight: bold; margin-top: 3px; }
-        .result-value.red { color: var(--neon-red); }
-        .result-value.evasive { color: var(--neon-green); }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-8 flex items-center justify-center">
 
-    <div class="header">
-        <h1>IA de Combate: Resistência</h1>
+    <div class="max-w-xl w-full panel rounded-xl overflow-hidden">
+        
+        <div class="bg-slate-800 p-5 border-b border-slate-700 text-center relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]"></div>
+            <h1 class="text-2xl font-black text-white tracking-widest uppercase relative z-10">X-Wing Engine</h1>
+            <p class="text-amber-400 text-xs font-bold mt-1 tracking-widest relative z-10">Motor de Pesos & IA de Engajamento</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Nave da IA</label>
+                    <select id="naveSelect" onchange="atualizarSlidersNave()" class="w-full bg-slate-900/80 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-amber-500 outline-none font-medium">
+                        </select>
+                </div>
+                
+                <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                    <div class="flex justify-between text-xs mb-2">
+                        <span class="text-blue-400 font-bold uppercase tracking-wide">Escudos</span>
+                        <span id="escudoValue" class="text-blue-200 font-bold bg-blue-900 px-2 rounded">0</span>
+                    </div>
+                    <input type="range" id="escudoSlider" min="0" max="10" value="0" class="slider-escudo" oninput="document.getElementById('escudoValue').innerText = this.value">
+                </div>
+                
+                <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                    <div class="flex justify-between text-xs mb-2">
+                        <span class="text-yellow-500 font-bold uppercase tracking-wide">Casco (Vida)</span>
+                        <span id="cascoValue" class="text-yellow-200 font-bold bg-yellow-900 px-2 rounded">0</span>
+                    </div>
+                    <input type="range" id="cascoSlider" min="1" max="10" value="1" class="slider-casco" oninput="document.getElementById('cascoValue').innerText = this.value">
+                </div>
+            </div>
+
+            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <label class="block text-xs font-bold text-slate-400 mb-3 text-center uppercase tracking-widest">Radar Direcional (Posição do Alvo)</label>
+                
+                <div class="grid grid-cols-3 gap-2 w-full max-w-[220px] mx-auto mb-5">
+                    <button onclick="setDir('frente_esq')" id="btn-frente_esq" class="dir-btn h-12 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center text-xl font-bold">↖</button>
+                    <button onclick="setDir('frente')" id="btn-frente" class="dir-btn h-12 rounded bg-amber-600 border border-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)] transition flex items-center justify-center text-xl font-bold">↑</button>
+                    <button onclick="setDir('frente_dir')" id="btn-frente_dir" class="dir-btn h-12 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center text-xl font-bold">↗</button>
+
+                    <button onclick="setDir('esquerda')" id="btn-esquerda" class="dir-btn h-12 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center text-xl font-bold">←</button>
+                    <div class="h-12 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-blue-500 text-xl font-black mb-1">▲</span>
+                        <span class="text-[8px] font-bold text-slate-500 uppercase leading-none">A.I.</span>
+                    </div>
+                    <button onclick="setDir('direita')" id="btn-direita" class="dir-btn h-12 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center text-xl font-bold">→</button>
+
+                    <button onclick="setDir('tras_esq')" id="btn-tras_esq" class="dir-btn h-12 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center text-xl font-bold">↙</button>
+                    <button onclick="setDir('tras')" id="btn-tras" class="dir-btn h-12 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center text-xl font-bold">↓</button>
+                    <button onclick="setDir('tras_dir')" id="btn-tras_dir" class="dir-btn h-12 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center text-xl font-bold">↘</button>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setDist('1')" id="btn-dist-1" class="dist-btn py-2 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition text-xs font-bold tracking-wide">ALC. 1</button>
+                    <button onclick="setDist('2')" id="btn-dist-2" class="dist-btn py-2 rounded bg-amber-600 border border-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)] transition text-xs font-bold tracking-wide">ALC. 2</button>
+                    <button onclick="setDist('3')" id="btn-dist-3" class="dist-btn py-2 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition text-xs font-bold tracking-wide">ALC. 3</button>
+                    <button onclick="setDist('fora')" id="btn-dist-fora" class="dist-btn py-2 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 transition text-xs font-bold tracking-wide">FORA</button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <label class="block text-xs font-bold text-slate-400 mb-3 uppercase tracking-widest border-b border-slate-700 pb-2">Sensores de Navegação</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-800 rounded transition">
+                        <input type="checkbox" id="chkIAEstressada" class="check-tactical">
+                        <span class="text-sm text-slate-300 font-medium">IA Estressada</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-800 rounded transition">
+                        <input type="checkbox" id="chkObstaculo" class="check-tactical">
+                        <span class="text-sm text-slate-300 font-medium">Obstáculo na Rota Frontal</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-800 rounded transition">
+                        <input type="checkbox" id="chkBorda" class="check-tactical">
+                        <span class="text-sm text-slate-300 font-medium">IA Perto da Borda</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-800 rounded transition">
+                        <input type="checkbox" id="chkMultiplos" class="check-tactical">
+                        <span class="text-sm text-slate-300 font-medium" title="Ativa Stance Flanker">Múltiplos Inimigos (Flanco)</span>
+                    </label>
+                </div>
+
+                <label class="block text-xs font-bold text-slate-400 mb-3 uppercase tracking-widest border-b border-slate-700 pb-2">Engajamento & Formação</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-800 rounded transition">
+                        <input type="checkbox" id="chkAlvoEstressado" class="check-tactical">
+                        <span class="text-sm text-amber-400 font-bold" title="Ativa Análise Preditiva do cone do alvo">Alvo Estressado (Preditivo)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-800 rounded transition">
+                        <input type="checkbox" id="chkTemMira" class="check-tactical">
+                        <span class="text-sm text-blue-400 font-bold" title="Já tem Target Lock">IA já possui Mira Travada</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-800 rounded transition md:col-span-2">
+                        <input type="checkbox" id="chkNaMira" class="check-tactical">
+                        <span class="text-sm text-red-400 font-bold" title="Nave está prestes a tomar tiro">IA no Arco de Tiro Inimigo (Gatilho P/ Evasão)</span>
+                    </label>
+                </div>
+
+                <div class="border-t border-slate-700 pt-3">
+                    <label class="block text-xs font-bold text-emerald-400 mb-2 uppercase tracking-wide">Sinal de Líder em Campo (Howlrunner)</label>
+                    <select id="farolSelect" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="nenhum">Nenhum / N/A</option>
+                        <option value="frente">Líder à Frente da IA</option>
+                        <option value="esquerda">Líder à Esquerda da IA</option>
+                        <option value="direita">Líder à Direita da IA</option>
+                        <option value="atras">Líder Atrás da IA</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="processarMotorTatico()" class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-black py-4 rounded-xl transition duration-200 shadow-[0_0_20px_rgba(245,158,11,0.3)] active:scale-95 uppercase tracking-widest text-lg">
+                Calcular Vetor & Ação
+            </button>
+        </div>
+
+        <div id="resultadoArea" class="hidden bg-slate-900 p-6 border-t border-slate-700">
+            
+            <div class="flex justify-between items-end mb-4 border-b border-slate-800 pb-2">
+                <div>
+                    <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Stance Declarada</h2>
+                    <div id="stanceDisplay" class="text-xl font-black text-white uppercase tracking-widest">HUNTER</div>
+                </div>
+                <div class="text-right">
+                    <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Score Final</h2>
+                    <div id="scoreDisplay" class="text-xl font-black text-amber-400">+12 Pts</div>
+                </div>
+            </div>
+
+            <div class="text-center py-4">
+                <h2 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Vetor Otimizado</h2>
+                <div id="manobraDisplay" class="text-5xl font-black mb-4 flex items-center justify-center gap-3">
+                    </div>
+                
+                <h2 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ação Definitiva Prescrita</h2>
+                <div id="acaoDisplay" class="text-2xl md:text-3xl font-black acao-destaque uppercase tracking-widest mb-2 leading-none">
+                    </div>
+                <p id="motivoAcaoDisplay" class="text-amber-300 text-xs italic font-bold mb-4"></p>
+            </div>
+
+            <div class="bg-black/40 rounded p-3 mt-2 border border-slate-800">
+                <h3 class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Log da Matriz de Decisão:</h3>
+                <p id="motivoDisplay" class="text-slate-300 text-xs font-mono leading-relaxed"></p>
+            </div>
+        </div>
+
     </div>
 
-    <div class="dashboard">
-        <div class="section-label">Unidade Inimiga Ativa</div>
-        <select id="shipSelect">
-            <option value="t70">T-70 X-Wing (Agressivo)</option>
-            <option value="bomber">MG-100 Bomber (Bombardeiro)</option>
-            <option value="kwing">K-Wing (Suporte/SLAM)</option>
-        </select>
-
-        <div class="section-label">Integridade Estrutural da IA</div>
-        <div class="health-grid">
-            <div class="health-box shield-box">
-                <label>Escudos</label>
-                <input type="number" id="shieldCount" min="0" max="5" value="3">
-            </div>
-            <div class="health-box hull-box" id="hullContainer">
-                <label>Casco</label>
-                <input type="number" id="hullCount" min="0" max="9" value="3" onchange="checkCritical()">
-            </div>
-        </div>
-
-        <div class="section-label">Sua Posição (Império) no Radar</div>
-        <div class="radar-grid" id="radarGrid">
-            <button class="btn-radar" onclick="setPos('NW', this)">NW</button>
-            <button class="btn-radar active" onclick="setPos('N', this)">N</button>
-            <button class="btn-radar" onclick="setPos('NE', this)">NE</button>
-            
-            <button class="btn-radar" onclick="setPos('W', this)">W</button>
-            <button class="btn-radar center-ia">IA</button>
-            <button class="btn-radar" onclick="setPos('E', this)">E</button>
-            
-            <button class="btn-radar" onclick="setPos('SW', this)">SW</button>
-            <button class="btn-radar" onclick="setPos('S', this)">S</button>
-            <button class="btn-radar" onclick="setPos('SE', this)">SE</button>
-        </div>
-
-        <div class="section-label">Distância do Alvo</div>
-        <div class="range-container" id="rangeGrid">
-            <button class="btn-range" onclick="setDist(1, this)">Alcance 1</button>
-            <button class="btn-range active" onclick="setDist(2, this)">Alcance 2</button>
-            <button class="btn-range" onclick="setDist(3, this)">Alcance 3</button>
-        </div>
-
-        <label class="stress-box">
-            <input type="checkbox" id="stressCheck">
-            <span>Nave da Resistência está Estressada?</span>
-        </label>
-
-        <button class="btn-process" onclick="calculateAI()">PROCESSAR MANOBRA</button>
-
-        <div class="result-panel">
-            <div class="result-row">
-                <span class="result-label">MANOBRA CALCULADA:</span>
-                <span class="result-value" id="outManeuver">Aguardando telemetria...</span>
-            </div>
-            <div class="result-row" style="margin-bottom: 0;">
-                <span class="result-label">AÇÃO SUGERIDA:</span>
-                <span class="result-value" id="outAction">Aguardando telemetria...</span>
-            </div>
-        </div>
-    </div>
+    <script src="naves.js"></script>
 
     <script>
-        let currentPosition = 'N';
-        let currentRange = 2;
+        // --- 1. ESTADO DA UI GLOBAL ---
+        let direcaoInimigo = 'frente';
+        let distanciaInimigo = '2';
 
-        function setPos(pos, element) {
-            currentPosition = pos;
-            document.querySelectorAll('#radarGrid .btn-radar:not(.center-ia)').forEach(btn => btn.classList.remove('active'));
-            element.classList.add('active');
+        function popularSelectNaves() {
+            const select = document.getElementById('naveSelect');
+            select.innerHTML = ''; // Garante que o select comece limpo
+
+            const faccoes = {};
+
+            // 1. Agrupa as naves pela facção definida no naves.js
+            for (const id in xwingDials) {
+                const nave = xwingDials[id];
+                const nomeFaccao = nave.faccao || "Outras Facções"; 
+
+                if (!faccoes[nomeFaccao]) {
+                    faccoes[nomeFaccao] = [];
+                }
+                faccoes[nomeFaccao].push({ id: id, nome: nave.nome });
+            }
+
+            // 2. Cria os elementos HTML no Select
+            for (const nomeFaccao in faccoes) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = nomeFaccao;
+
+                faccoes[nomeFaccao].forEach(naveObj => {
+                    const option = document.createElement('option');
+                    option.value = naveObj.id;
+                    option.textContent = naveObj.nome;
+                    optgroup.appendChild(option);
+                });
+
+                select.appendChild(optgroup);
+            }
         }
 
-        function setDist(dist, element) {
-            currentRange = dist;
-            document.querySelectorAll('#rangeGrid .btn-range').forEach(btn => btn.classList.remove('active'));
-            element.classList.add('active');
+        function setDir(dir) {
+            direcaoInimigo = dir;
+            document.querySelectorAll('.dir-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-600', 'border-amber-500', 'text-white', 'shadow-[0_0_15px_rgba(245,158,11,0.4)]');
+                btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-400');
+            });
+            const activeBtn = document.getElementById('btn-' + dir);
+            activeBtn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-400');
+            activeBtn.classList.add('bg-amber-600', 'border-amber-500', 'text-white', 'shadow-[0_0_15px_rgba(245,158,11,0.4)]');
         }
 
-        // Alerta visual de Casco Crítico
-        function checkCritical() {
-            const hull = parseInt(document.getElementById('hullCount').value);
-            const container = document.getElementById('hullContainer');
-            if (hull === 1) container.classList.add('critical');
-            else container.classList.remove('critical');
+        function setDist(dist) {
+            distanciaInimigo = dist;
+            document.querySelectorAll('.dist-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-600', 'border-amber-500', 'text-white', 'shadow-[0_0_15px_rgba(245,158,11,0.4)]');
+                btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-400');
+            });
+            const activeBtn = document.getElementById('btn-dist-' + dist);
+            activeBtn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-400');
+            activeBtn.classList.add('bg-amber-600', 'border-amber-500', 'text-white', 'shadow-[0_0_15px_rgba(245,158,11,0.4)]');
         }
 
-        function calculateAI() {
-            const ship = document.getElementById('shipSelect').value;
-            const isStressed = document.getElementById('stressCheck').checked;
-            const shields = parseInt(document.getElementById('shieldCount').value);
-            const hull = parseInt(document.getElementById('hullCount').value);
+        const dicUI = {
+            'frente': { t: 'Frente', i: '↑' }, 'leve_esq': { t: 'Curva Leve Esq', i: '↖' }, 'fechada_esq': { t: 'Curva Fechada Esq', i: '↰' },
+            'leve_dir': { t: 'Curva Leve Dir', i: '↗' }, 'fechada_dir': { t: 'Curva Fechada Dir', i: '↱' }, 'k_turn': { t: 'K-Turn', i: '⟲' },
+            't_roll_esq': { t: 'Talon Roll Esq', i: '↶' }, 't_roll_dir': { t: 'Talon Roll Dir', i: '↷' }, 'pare': { t: 'Pare', i: '■' }
+        };
+
+        const acoesMap = {
+            "FOCO": "foco", "AQUISIÇÃO DE MIRA": "mira", "PIRUETA (BARREL ROLL)": "pirueta", "IMPULSO (BOOST)": "impulso", "DESVIO (EVADE)": "desvio"
+        };
+
+        function atualizarSlidersNave() {
+            const nave = xwingDials[document.getElementById('naveSelect').value];
+            document.getElementById('cascoSlider').max = nave.cascoBase;
+            document.getElementById('cascoSlider').value = nave.cascoBase;
+            document.getElementById('cascoValue').innerText = nave.cascoBase;
+            document.getElementById('escudoSlider').max = nave.escudoBase;
+            document.getElementById('escudoSlider').value = nave.escudoBase;
+            document.getElementById('escudoValue').innerText = nave.escudoBase;
+        }
+
+        // --- 2. MOTOR TÁTICO: MÁQUINA DE ESTADOS & ANÁLISE PREDITIVA ---
+        
+        function calcularStance(casco, multiplosInimigos) {
+            if (casco <= 1) return 'Survivor';
+            if (multiplosInimigos) return 'Flanker';
+            return 'Hunter';
+        }
+
+        function aplicarAnalisePreditiva(dir, dist, alvoEstressado) {
+            if (!alvoEstressado) return { pDir: dir, log: "" };
+            const predMaps = {
+                'frente': 'frente', 'frente_esq': 'esquerda', 'frente_dir': 'direita',
+                'esquerda': 'tras_esq', 'direita': 'tras_dir', 'tras_esq': 'tras', 'tras_dir': 'tras', 'tras': 'tras'
+            };
+            const pDir = predMaps[dir] || dir;
+            return { pDir: pDir, log: `[Preditivo] Alvo estressado. Rota corrigida de '${dir}' para '${pDir}'. ` };
+        }
+
+        function isManeuverInArc(targetDir, mDir) {
+            const arcMap = {
+                'frente': ['frente', 'leve_esq', 'leve_dir'], 'frente_esq': ['leve_esq', 'fechada_esq'], 'frente_dir': ['leve_dir', 'fechada_dir'],
+                'esquerda': ['fechada_esq', 't_roll_esq'], 'direita': ['fechada_dir', 't_roll_dir'],
+                'tras_esq': ['k_turn', 't_roll_esq'], 'tras_dir': ['k_turn', 't_roll_dir'], 'tras': ['k_turn', 't_roll_esq', 't_roll_dir']
+            };
+            return (arcMap[targetDir] && arcMap[targetDir].includes(mDir));
+        }
+
+        function isManeuverEvading(targetDir, mDir) {
+            const evadeMap = {
+                'frente': ['fechada_esq', 'fechada_dir', 't_roll_esq', 't_roll_dir', 'k_turn'],
+                'frente_esq': ['frente', 'leve_dir', 'fechada_dir'], 'frente_dir': ['frente', 'leve_esq', 'fechada_esq'],
+                'esquerda': ['frente', 'leve_dir', 'fechada_dir'], 'direita': ['frente', 'leve_esq', 'fechada_esq'],
+                'tras': ['frente', 'leve_esq', 'leve_dir']
+            };
+            return (evadeMap[targetDir] && evadeMap[targetDir].includes(mDir));
+        }
+
+        function isForwardManeuver(mDir) {
+            return ['frente', 'leve_esq', 'leve_dir'].includes(mDir);
+        }
+
+        // --- 3. MOTOR DE PONTUAÇÃO E LÓGICA DE AÇÕES ---
+        function processarMotorTatico() {
+            const nave = xwingDials[document.getElementById('naveSelect').value];
+            const casco = parseInt(document.getElementById('cascoSlider').value);
             
-            let maneuver = "";
-            let action = "";
-            let isEvasive = false;
+            const iaEstressada = document.getElementById('chkIAEstressada').checked;
+            const alvoEstressado = document.getElementById('chkAlvoEstressado').checked;
+            const obstaculoFrontal = document.getElementById('chkObstaculo').checked;
+            const pertoBorda = document.getElementById('chkBorda').checked;
+            const multiplos = document.getElementById('chkMultiplos').checked;
+            const naMiraInimiga = document.getElementById('chkNaMira').checked;
+            const temMira = document.getElementById('chkTemMira').checked;
+            const posFarol = document.getElementById('farolSelect').value;
 
-            const posFront = ['NW', 'N', 'NE'];
-            const posBehind = ['SW', 'S', 'SE'];
-            const posSide = ['W', 'E'];
+            const stance = calcularStance(casco, multiplos);
+            const preditivo = aplicarAnalisePreditiva(direcaoInimigo, distanciaInimigo, alvoEstressado);
+            const alvoDirFinal = preditivo.pDir;
+            
+            let melhorManobra = null;
+            let bestScore = -9999;
+            let logDetalhado = preditivo.log + `<br>[Stance: ${stance}] Avaliando destinos:<br>`;
+            let manobrasValidas = [];
 
-            // OVERRIDE: MÁQUINA DE ESTADOS (MODO SOBREVIVÊNCIA)
-            if (hull === 1 && shields === 0) {
-                isEvasive = true;
-                if (ship === 't70') {
-                    maneuver = "Frente 3 ou 4 (Fuga Máxima)";
-                    action = "Esquiva (Evade) ou Impulso";
-                } else if (ship === 'kwing') {
-                    maneuver = "Manobra SLAM (Para longe do Império)";
-                    action = "Nenhuma (Efeito do SLAM)";
-                } else if (ship === 'bomber') {
-                    maneuver = "Frente 2 (Velocidade Máxima)";
-                    action = "Soltar Bomba (Para bloquear perseguição)";
+            nave.manobras.forEach(m => {
+                let score = 0;
+                let mathLog = [];
+
+                if (m.dificuldade === 'vermelha') {
+                    if (iaEstressada) {
+                        score = -1000; return; 
+                    } else if (nave.piloto === 'soontir_fel') {
+                        score += 2; 
+                        mathLog.push("+2 Gatilho: Soontir Fel (Recompensa de Foco)");
+                    } else {
+                        score -= 3;
+                        mathLog.push("-3 Estresse Desnecessário");
+                    }
+                } else if (m.dificuldade === 'verde' && iaEstressada) {
+                    score += 5; mathLog.push("+5 Limpa Estresse");
                 }
-            } 
-            // LÓGICA AGRESSIVA PADRÃO
-            else {
-                if (ship === 't70') {
-                    if (posFront.includes(currentPosition)) {
-                        maneuver = (currentRange === 1) ? "Curva Fechada 2" : "Frente 3";
-                        action = (currentRange === 1) ? "Foco" : "Mira (Target Lock)";
-                    } else if (posBehind.includes(currentPosition)) {
-                        maneuver = "Talon Roll 3 (Manobra Vermelha)";
-                        action = "Nenhuma (Estressada após a manobra)";
-                    } else {
-                        maneuver = "Curva Leve 2 (Bank)";
-                        action = "Impulso (Boost) para ajuste de arco";
-                    }
-                } 
-                else if (ship === 'bomber') {
-                    if (currentRange === 1) {
-                        maneuver = "Frente 1";
-                        action = "Soltar Bomba / Minas";
-                    } else {
-                        maneuver = "Curva Leve 2";
-                        action = "Foco";
-                    }
-                } 
-                else if (ship === 'kwing') {
-                    if (currentRange === 1) {
-                        maneuver = "Manobra SLAM (Fuga / Reposicionamento)";
-                        action = "Nenhuma (Efeito do SLAM)";
-                    } else {
-                        maneuver = "Frente 2";
-                        action = "Mira (Target Lock)";
+
+                const noArco = isManeuverInArc(alvoDirFinal, m.direcao);
+                const evade = isManeuverEvading(alvoDirFinal, m.direcao);
+
+                let pesoArco = 5, pesoEvasao = 3;
+                if (stance === 'Survivor') { pesoArco = 0; pesoEvasao = 10; } 
+                else if (stance === 'Hunter') { pesoArco = 8; pesoEvasao = 0; } 
+                else if (stance === 'Flanker') { pesoArco = 5; pesoEvasao = 5; }
+
+                if (noArco) { score += pesoArco; mathLog.push(`+${pesoArco} Arco`); }
+                if (evade) { score += pesoEvasao; mathLog.push(`+${pesoEvasao} Evasão`); }
+
+                if (posFarol !== 'nenhum') {
+                    let alignMap = {
+                        'frente': ['frente', 'leve_esq', 'leve_dir'],
+                        'esquerda': ['leve_esq', 'fechada_esq', 't_roll_esq'],
+                        'direita': ['leve_dir', 'fechada_dir', 't_roll_dir'],
+                        'atras': ['k_turn', 't_roll_esq', 't_roll_dir']
+                    };
+                    if (alignMap[posFarol] && alignMap[posFarol].includes(m.direcao)) {
+                        score += 4;
+                        mathLog.push("+4 Formação de Enxame (Farol)");
                     }
                 }
-            }
 
-            // OVERRIDE DE ESTRESSE PRÉVIO
-            if (isStressed && !isEvasive) {
-                maneuver = "[MANOBRA VERDE] " + maneuver.split('(')[0]; 
-                action = "Nenhuma (Estressada previamente)";
-            } else if (isStressed && isEvasive) {
-                // Se está estressada E quase morrendo, tenta limpar o estresse fugindo
-                maneuver = "[MANOBRA VERDE] Reta Longe do Inimigo";
-                action = "Nenhuma (Tentando limpar estresse)";
-            }
+                if (obstaculoFrontal && isForwardManeuver(m.direcao)) {
+                    score -= 10; mathLog.push("-10 Obstáculo");
+                }
+                
+                if (pertoBorda && m.velocidade >= 3) {
+                    score -= 5; mathLog.push("-5 Risco Borda");
+                }
 
-            // Atualização da Interface
-            const outManeuver = document.getElementById('outManeuver');
-            const outAction = document.getElementById('outAction');
+                if (score > -500) {
+                    manobrasValidas.push({ manobra: m, score: score, log: `(${m.velocidade} ${dicUI[m.direcao].t}) = ${score}pts [${mathLog.join(', ')}]` });
+                }
+            });
 
-            if (isEvasive) {
-                outManeuver.textContent = "[MODO EVASIVO] " + maneuver;
-                outAction.classList.add('evasive');
-                outAction.classList.remove('red');
+            manobrasValidas.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return b.manobra.velocidade - a.manobra.velocidade; 
+            });
+
+            if (manobrasValidas.length === 0) {
+                melhorManobra = nave.manobras.find(m => m.dificuldade === 'verde') || nave.manobras[0];
+                logDetalhado += "ERRO: Sem rota segura. Acionando manobra de recuo.";
+                bestScore = 0;
             } else {
-                outManeuver.textContent = maneuver;
-                outAction.classList.remove('evasive');
-                if (isStressed || action.includes("Nenhuma")) {
-                    outAction.classList.add('red');
-                } else {
-                    outAction.classList.remove('red');
+                melhorManobra = manobrasValidas[0].manobra;
+                bestScore = manobrasValidas[0].score;
+                logDetalhado += `✓ Aprovada: ${manobrasValidas[0].log}<br>2ª Opção: ${manobrasValidas[1] ? manobrasValidas[1].log : 'N/A'}`;
+            }
+
+            let acoesFeitas = [];
+            let motivosAcoes = [];
+            let acoesDisponiveis = [...nave.acoes];
+            
+            let numLoopsAcoes = (nave.piloto === 'darth_vader' && melhorManobra.dificuldade !== 'vermelha' && (!iaEstressada || melhorManobra.dificuldade === 'verde')) ? 2 : 1;
+            const noArcoFinal = isManeuverInArc(alvoDirFinal, melhorManobra.direcao);
+
+            if (melhorManobra.dificuldade === 'vermelha' || (iaEstressada && melhorManobra.dificuldade !== 'verde')) {
+                acoesFeitas.push("NENHUMA");
+                motivosAcoes.push("[Perda de Ação] Nave estressada ou manobra vermelha.");
+            } else {
+                for (let i = 0; i < numLoopsAcoes; i++) {
+                    let acaoVez = "";
+                    let m = "";
+
+                    if (naMiraInimiga && (acoesDisponiveis.includes('pirueta') || acoesDisponiveis.includes('impulso'))) {
+                        acaoVez = acoesDisponiveis.includes('pirueta') ? "PIRUETA (BARREL ROLL)" : "IMPULSO (BOOST)";
+                        m = "[Sobrevivência] Usando reposicionamento para evadir do arco do inimigo.";
+                    }
+                    else if (noArcoFinal && distanciaInimigo !== 'fora') {
+                        if (naMiraInimiga && acoesDisponiveis.includes('foco')) {
+                            acaoVez = "FOCO";
+                            m = "[Joust] Foco maximiza ofensiva e pode mitigar dano sofrido em troca direta.";
+                        } else if (temMira && acoesDisponiveis.includes('foco')) {
+                            acaoVez = "FOCO";
+                            m = "[Otimização Máxima] Já possui Mira. Foco garante letalidade máxima.";
+                        } else if (acoesDisponiveis.includes('mira')) {
+                            acaoVez = "AQUISIÇÃO DE MIRA";
+                            m = "[Ofensiva Pura] Inimigo enquadrado. Travando mira para dados consistentes.";
+                        } else if (acoesDisponiveis.includes('foco')) {
+                            acaoVez = "FOCO";
+                            m = "[Ofensiva Padrão] O Foco aumentará a média de acertos.";
+                        }
+                    }
+                    else {
+                        if (naMiraInimiga) {
+                            if (acoesDisponiveis.includes('desvio')) {
+                                acaoVez = "DESVIO (EVADE)";
+                                m = "[Defesa Pura] Sob ataque sem retorno de tiro. Mitigação imediata.";
+                            } else if (acoesDisponiveis.includes('foco')) {
+                                acaoVez = "FOCO";
+                                m = "[Defesa Pura] Foco será gasto 100% na rolagem de evasão.";
+                            }
+                        } else {
+                            if (acoesDisponiveis.includes('mira') && distanciaInimigo !== 'fora' && !temMira) {
+                                acaoVez = "AQUISIÇÃO DE MIRA";
+                                m = "[Antecipação] Nenhum engajamento imediato. Travando a mira pro próximo turno.";
+                            } else if (acoesDisponiveis.includes('foco')) {
+                                acaoVez = "FOCO";
+                                m = "[Antecipação] Adquirindo Foco preventivo e de prontidão.";
+                            }
+                        }
+                    }
+
+                    if (!acaoVez && acoesDisponiveis.length > 0) {
+                        acaoVez = acoesDisponiveis[0].toUpperCase();
+                        m = "[Ação Sobrando] Sem opções táticas nativas, executando rotina.";
+                    }
+
+                    if (acaoVez) {
+                        acoesFeitas.push(acaoVez);
+                        let logPrefix = numLoopsAcoes > 1 ? `(${i+1}ª Ação): ` : "";
+                        motivosAcoes.push(logPrefix + m);
+                        
+                        let keyToRemove = acoesMap[acaoVez];
+                        if (keyToRemove) {
+                            acoesDisponiveis = acoesDisponiveis.filter(a => a !== keyToRemove);
+                        }
+                    }
                 }
             }
-            outAction.textContent = action;
+
+            document.getElementById('resultadoArea').classList.remove('hidden');
+            document.getElementById('stanceDisplay').innerText = stance;
+            
+            const sDisp = document.getElementById('scoreDisplay');
+            sDisp.innerText = bestScore > 0 ? `+${bestScore} Pts` : `${bestScore} Pts`;
+            sDisp.className = `text-xl font-black ${bestScore >= 5 ? 'text-green-400' : (bestScore < 0 ? 'text-red-400' : 'text-amber-400')}`;
+
+            const uiData = dicUI[melhorManobra.direcao];
+            let corCSS = melhorManobra.dificuldade === 'verde' ? 'manobra-verde' : (melhorManobra.dificuldade === 'vermelha' ? 'manobra-vermelha' : 'manobra-branca');
+            let corBG = melhorManobra.dificuldade === 'verde' ? 'bg-green-900/30 border-green-500' : (melhorManobra.dificuldade === 'vermelha' ? 'bg-red-900/30 border-red-500' : 'bg-slate-700 border-slate-500');
+
+            document.getElementById('manobraDisplay').className = `text-4xl md:text-5xl font-black mb-4 flex items-center justify-center gap-3 ${corCSS}`;
+            document.getElementById('manobraDisplay').innerHTML = `
+                <span class="rounded px-4 py-2 border shadow-inner ${corBG}">${melhorManobra.velocidade}</span>
+                <span>${uiData.i}</span>
+                <span class="text-2xl md:text-3xl">${uiData.t}</span>
+            `;
+
+            document.getElementById('acaoDisplay').innerHTML = acoesFeitas.join(' <span class="text-white mx-2">+</span> ');
+            document.getElementById('motivoAcaoDisplay').innerHTML = motivosAcoes.join("<br>");
+            document.getElementById('motivoDisplay').innerHTML = logDetalhado;
         }
+
+        // Inicialização
+        window.onload = function() {
+            popularSelectNaves();  
+            atualizarSlidersNave(); 
+        };
     </script>
 </body>
 </html>
