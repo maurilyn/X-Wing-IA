@@ -403,7 +403,7 @@
                 }
             });
 
-            // NOVA LÓGICA DE ORDENAÇÃO COM 3 CRITÉRIOS DE DESEMPATE
+            // NOVA LÓGICA DE ORDENAÇÃO COM 4 CRITÉRIOS DE DESEMPATE
             manobrasValidas.sort((a, b) => {
                 // 1. Desempate por Maior Pontuação
                 if (b.score !== a.score) return b.score - a.score;
@@ -413,7 +413,18 @@
                 
                 // 3. Desempate por Dificuldade (Verde > Branca > Vermelha)
                 const difPeso = { 'verde': 3, 'branca': 2, 'vermelha': 1 };
-                return difPeso[b.manobra.dificuldade] - difPeso[a.manobra.dificuldade];
+                if (difPeso[b.manobra.dificuldade] !== difPeso[a.manobra.dificuldade]) {
+                    return difPeso[b.manobra.dificuldade] - difPeso[a.manobra.dificuldade];
+                }
+
+                // 4. Desempate por Suavidade da Trajetória (Frente > Leve > Fechada > Especiais)
+                const dirPeso = {
+                    'frente': 4,
+                    'leve_esq': 3, 'leve_dir': 3,
+                    'fechada_esq': 2, 'fechada_dir': 2,
+                    't_roll_esq': 1, 't_roll_dir': 1, 'k_turn': 1, 'pare': 0
+                };
+                return dirPeso[b.manobra.direcao] - dirPeso[a.manobra.direcao];
             });
 
             if (manobrasValidas.length === 0) {
