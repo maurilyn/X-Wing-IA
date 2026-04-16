@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -346,6 +346,7 @@
                 let score = 0;
                 let mathLog = [];
 
+                // 1. Regras de Estresse e Gatilhos de Piloto
                 if (m.dificuldade === 'vermelha') {
                     if (iaEstressada) {
                         score = -1000; return; 
@@ -360,6 +361,7 @@
                     score += 5; mathLog.push("+5 Limpa Estresse");
                 }
 
+                // 2. Cálculo do Arco e Evasão Baseado na Postura
                 const noArco = isManeuverInArc(alvoDirFinal, m.direcao);
                 const evade = isManeuverEvading(alvoDirFinal, m.direcao);
 
@@ -371,6 +373,7 @@
                 if (noArco) { score += pesoArco; mathLog.push(`+${pesoArco} Arco`); }
                 if (evade) { score += pesoEvasao; mathLog.push(`+${pesoEvasao} Evasão`); }
 
+                // 3. Regras de Campo e Espaço Físico
                 if (obstaculoFrontal && isForwardManeuver(m.direcao)) {
                     score -= 10; mathLog.push("-10 Obstáculo");
                 }
@@ -379,14 +382,38 @@
                     score -= 5; mathLog.push("-5 Risco Borda");
                 }
 
+                // 4. CONTROLE DE DISTÂNCIA E COLISÃO (O "Freio" da IA)
+                if (direcaoInimigo === 'frente' && isForwardManeuver(m.direcao)) {
+                    if (distanciaInimigo === '1' && m.velocidade >= 2) {
+                        score -= 8; 
+                        mathLog.push("-8 Risco Colisão (Alc. 1)");
+                    } 
+                    else if (distanciaInimigo === '2' && m.velocidade >= 4) {
+                        score -= 6; 
+                        mathLog.push("-6 Risco Colisão (Alc. 2)");
+                    }
+                    else if (distanciaInimigo === '3' && m.velocidade === 1) {
+                        score -= 2;
+                        mathLog.push("-2 Muito Lento p/ Engajar");
+                    }
+                }
+
                 if (score > -500) {
                     manobrasValidas.push({ manobra: m, score: score, log: `(${m.velocidade} ${dicUI[m.direcao].t}) = ${score}pts [${mathLog.join(', ')}]` });
                 }
             });
 
+            // NOVA LÓGICA DE ORDENAÇÃO COM 3 CRITÉRIOS DE DESEMPATE
             manobrasValidas.sort((a, b) => {
+                // 1. Desempate por Maior Pontuação
                 if (b.score !== a.score) return b.score - a.score;
-                return b.manobra.velocidade - a.manobra.velocidade; 
+                
+                // 2. Desempate por Maior Velocidade
+                if (b.manobra.velocidade !== a.manobra.velocidade) return b.manobra.velocidade - a.manobra.velocidade;
+                
+                // 3. Desempate por Dificuldade (Verde > Branca > Vermelha)
+                const difPeso = { 'verde': 3, 'branca': 2, 'vermelha': 1 };
+                return difPeso[b.manobra.dificuldade] - difPeso[a.manobra.dificuldade];
             });
 
             if (manobrasValidas.length === 0) {
@@ -399,6 +426,7 @@
                 logDetalhado += `✓ Aprovada: ${manobrasValidas[0].log}<br>2ª Opção: ${manobrasValidas[1] ? manobrasValidas[1].log : 'N/A'}`;
             }
 
+            // --- 4. ÁRVORE DE DECISÃO DE AÇÕES ---
             let acoesFeitas = [];
             let motivosAcoes = [];
             let acoesDisponiveis = [...nave.acoes];
@@ -471,6 +499,7 @@
                 }
             }
 
+            // 5. ATUALIZAR UI
             document.getElementById('resultadoArea').classList.remove('hidden');
             document.getElementById('stanceDisplay').innerText = stance;
             
